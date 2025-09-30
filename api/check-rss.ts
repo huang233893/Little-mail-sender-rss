@@ -1,61 +1,51 @@
-import { kv } from '@vercel/kv';
-import { sendEmail } from '../utils/email';
+import { getLatestArticle } from '../utils/rss';
+import { getLastArticleId, saveLastArticleId, getAllSubscribers } from '../utils/pg';
+import { sendNewArticleNotify } from '../utils/email';
 
-// 解析RSS获取最新文章
-function parseRss(xml: string) {
-  const titleMatch = xml.match(/<item>\s*<title>(.*?)<\/title>/);
-  const linkMatch = xml.match(/<item>\s*<title>.*?<\/title>\s*<link>(.*?)<\/link>/);
-  const pubDateMatch = xml.match(/<item>\s*<title>.*?<\/title>\s*<link>.*?<\/link>\s*<pubDate>(.*?)<\/pubDate>/);
+// 从环境变量获取RSS地址（必填）
+const RSS_URL = process.env.RSS_URL;
 
-  return {
-    title: titleMatch?.[1] || null,
-    link: linkMatch?.[1] || null,
-    pubDate: pubDateMatch?.[1] || null
-  };
-}
+export default async function handler() {
+  // 检查RSS地址配置
+  if (!RSS_URL) {
+    return new Response('未配置 RSS_URL 环境变量', { status: 500 });
+  }
 
-export default async function handler(req: Request) {
   try {
-    // 1. 获取你的RSS地址
-    const rssUrl = 'https://www.sumi233.top/rss.xml'; // 替换为你的RSS地址
-    const response = await fetch(rssUrl);
-    const rssXml = await response.text();
-
-    // 2. 解析最新文章
-    const { title, link, pubDate } = parseRss(rssXml);
-    if (!title || !link) {
-      return new Response(JSON.stringify({ error: '解析RSS失败' }), { status: 500 });
+    // 1. 获取最新文章
+    const latestArticle = await getLatestArticle(RSS_URL);
+    if (!latestArticle) {
+      return new Response('未获取到有效文章', { status: 200 });
     }
 
-    // 3. 检查是否是新文章（对比KV中存储的上次文章）
-    const lastPost = await kv.get('last_post');
-    if (lastPost === `${title}|${pubDate}`) {
-      return new Response(JSON.stringify({ message: '无新文章' }));
+    // 2. 对比上次记录的文章ID，判断是否为新文章
+    const lastArticleId = await getLastArticleId();
+    if (lastArticleId === latestArticle.id) {
+      return new Response('无新文章发布', { status: 200 });
     }
 
-    // 4. 存储最新文章标识到KV
-    await kv.set('last_post', `${title}|${pubDate}`);
+    // 3. 有新文章：更新记录并通知订阅者
+    await saveLastArticleId(latestArticle.id);
+    const subscribers = await getAllSubscribers();
 
-    // 5. 获取所有订阅者并发送通知
-    const { keys } = await kv.scan(0, { match: '*@*' }); // 匹配邮箱格式的键
-    for (const email of keys) {
-      const data = await kv.get(email);
-      if (data && JSON.parse(data as string).subscribed) {
-        await sendEmail(
-          email,
-          `新文章发布：${title}`,
-          `
-            <h3>📝 新文章通知</h3>
-            <p>最新文章：《${title}》</p>
-            <p>点击查看：<a href="${link}" target="_blank">${link}</a></p>
-          `
-        );
-      }
+    if (subscribers.length === 0) {
+      return new Response('检测到新文章，但无订阅用户', { status: 200 });
     }
 
-    return new Response(JSON.stringify({ success: true, message: '邮件发送完成' }));
+    // 4. 批量发送通知邮件（控制并发，避免触发邮件服务商限制）
+    const notifyPromises = subscribers.map(sub => 
+      sendNewArticleNotify(sub.email, {
+        title: latestArticle.title,
+        link: latestArticle.link
+      }).catch(err => {
+        console.error(`给 ${sub.email} 发送邮件失败：`, err);
+      })
+    );
+    await Promise.all(notifyPromises);
+
+    return new Response(`新文章通知已发送给 ${subscribers.length} 位订阅者`, { status: 200 });
   } catch (error) {
-    console.error('RSS检查失败:', error);
-    return new Response(JSON.stringify({ error: '检查RSS失败' }), { status: 500 });
+    console.error('RSS检查与通知流程出错：', error);
+    return new Response('处理失败', { status: 500 });
   }
 }

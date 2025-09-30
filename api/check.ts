@@ -1,44 +1,40 @@
-import { kv } from '@vercel/kv';
+import { Request } from 'node:http';
+import { getSubscriber } from '../utils/pg';
 
 export default async function handler(req: Request) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      }
-    });
-  }
+  // 解析URL参数
+  const url = new URL(req.url!, `http://${req.headers.host}`);
+  const email = url.searchParams.get('email')?.trim();
 
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: '只支持POST请求' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+  if (!email) {
+    return new Response(
+      JSON.stringify({ error: '请提供邮箱地址' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
-    const { email } = await req.json();
+    const subscriber = await getSubscriber(email);
 
-    if (!email) {
-      return new Response(JSON.stringify({ error: '请提供邮箱' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+    if (!subscriber) {
+      return new Response(
+        JSON.stringify({ status: '未订阅' }),
+        { headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    const emailKey = email.toLowerCase();
-    const subscriber = await kv.get(emailKey);
-    const subscribed = subscriber ? JSON.parse(subscriber as string).subscribed : false;
-
-    return new Response(JSON.stringify({ subscribed }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    return new Response(
+      JSON.stringify({
+        status: subscriber.subscribed ? '已订阅' : '已取消订阅',
+        subscribeTime: subscriber.subscribe_time.toISOString() // PostgreSQL 时间转ISO格式
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: '检查失败' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    console.error('查询订阅状态接口出错：', error);
+    return new Response(
+      JSON.stringify({ error: '查询失败，请稍后重试' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
