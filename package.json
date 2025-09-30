@@ -6,8 +6,8 @@
     "nodemailer": "^6.9.7"
   },
   "devDependencies": {
-    "@types/node": "^20.9.0",  // 解决 TypeScript 识别 `process` 的问题
-    "@types/nodemailer": "^6.4.14",  // 可选，提供 nodemailer 的类型定义
-    "typescript": "^5.2.2"  // 必须，用于编译 TypeScript 代码
+    "@types/node": "^20.9.0",
+    "@types/nodemailer": "^6.4.14",
+    "typescript": "^5.2.2"
   }
 }
