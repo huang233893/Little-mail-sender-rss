@@ -1,25 +1,20 @@
-import Parser from 'rss-parser';
+import Parser from 'rss-parser'; // 修正模块导入
 
 const parser = new Parser();
 
-// 解析RSS源，返回最新文章信息（取第一篇）
 export async function getLatestArticle(rssUrl: string) {
   try {
     const feed = await parser.parseURL(rssUrl);
-    if (feed.items.length === 0) {
-      console.log('RSS源中无文章');
-      return null;
-    }
-
-    const latestItem = feed.items[0];
+    if (feed.items.length === 0) return null;
+    const latest = feed.items[0];
     return {
-      id: latestItem.guid || latestItem.link, // 用guid或链接作为唯一标识
-      title: latestItem.title || '无标题',
-      link: latestItem.link || '',
-      pubDate: latestItem.pubDate || new Date().toISOString()
+      id: latest.guid || latest.link,
+      title: latest.title || '无标题',
+      link: latest.link || '',
+      pubDate: latest.pubDate
     };
   } catch (error) {
     console.error('RSS解析失败：', error);
-    throw new Error(`解析RSS时出错：${(error as Error).message}`);
+    return null;
   }
 }

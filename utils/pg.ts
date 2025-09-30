@@ -1,22 +1,20 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '@vercel/postgres'; // 修正模块导入
 
-// 初始化数据库表（首次运行时自动创建 subscribers 表）
+// 初始化数据库表
 async function initTable() {
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS subscribers (
-        email TEXT PRIMARY KEY,  # 邮箱作为唯一主键
+        email TEXT PRIMARY KEY,
         subscribed BOOLEAN NOT NULL DEFAULT true,
         subscribe_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    // 存储最新文章ID的表（单条记录）
     await sql`
       CREATE TABLE IF NOT EXISTS rss_state (
         key TEXT PRIMARY KEY DEFAULT 'last_article_id',
         value TEXT NOT NULL
       );
-      -- 初始化一条默认记录（如果不存在）
       INSERT INTO rss_state (value) 
       VALUES ('') 
       ON CONFLICT (key) DO NOTHING;
@@ -26,14 +24,11 @@ async function initTable() {
     console.error('数据库表初始化失败：', error);
   }
 }
-
-// 初始化表（项目启动时执行）
 initTable();
 
 // 存储订阅用户
 export async function saveSubscriber(email: string) {
   try {
-    // 若已存在则更新为订阅状态，否则插入新记录
     await sql`
       INSERT INTO subscribers (email, subscribed)
       VALUES (${email}, true)
@@ -46,7 +41,7 @@ export async function saveSubscriber(email: string) {
   }
 }
 
-// 获取订阅用户信息
+// 获取订阅用户
 export async function getSubscriber(email: string) {
   const { rows } = await sql`
     SELECT * FROM subscribers WHERE email = ${email};
@@ -63,7 +58,7 @@ export async function unsubscribe(email: string) {
   `;
 }
 
-// 获取所有已订阅的用户
+// 获取所有已订阅用户
 export async function getAllSubscribers() {
   const { rows } = await sql`
     SELECT email FROM subscribers WHERE subscribed = true;

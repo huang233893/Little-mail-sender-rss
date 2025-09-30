@@ -1,6 +1,10 @@
-// 极简测试 API，无任何依赖和复杂逻辑
-export default async function handler(req: Request) {
-  return new Response(JSON.stringify({ message: "API 正常" }), {
-    headers: { "Content-Type": "application/json" }
-  });
+export default async function handler() {
+  return new Response(
+    JSON.stringify({
+      message: 'API正常运行',
+      time: new Date().toISOString(),
+      database: 'Vercel PostgreSQL'
+    }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
 }
