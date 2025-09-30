@@ -2,7 +2,7 @@
   "version": 2, // 关键：声明用 V2 版本规则解析
   "crons": [
     {
-      "path": "/api/cron",
+      "path": "/api/check-rss.ts",
       "schedule": "0 10 * * *"
     }
   ],
