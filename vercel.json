@@ -1,12 +1,9 @@
 {
-  "version": 2, // 关键：声明用 V2 版本规则解析
-  "crons": [
-    {
-      "path": "/api/check-rss.ts",
-      "schedule": "0 10 * * *"
-    }
-  ],
-  "builds": [ // 关键：告诉 Vercel 如何运行你的代码（如果是 Node.js/TS 项目）
+  "version": 2,
+  "builds": [
     { "src": "api/**/*.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 }
