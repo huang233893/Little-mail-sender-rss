@@ -10,11 +10,14 @@
   "devDependencies": {
     "@types/node": "^20.11.17",
     "@types/nodemailer": "^6.4.14",
-    "@types/rss-parser": "*",
     "typescript": "^5.3.3"
   },
   "scripts": {
     "dev": "vercel dev",
-    "deploy": "vercel deploy"
+    "deploy": "vercel deploy",
+    "build": "tsc"
+  },
+  "engines": {
+    "node": ">=18.x"
   }
 }
