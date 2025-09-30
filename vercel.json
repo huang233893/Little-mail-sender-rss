@@ -1,8 +1,5 @@
 {
   "version": 2,
-  "static": [{
-    "public": "./public"  // 明确告诉 Vercel：静态文件在 public 目录
-  }],
   "builds": [
     { "src": "api/**/*.ts", "use": "@vercel/node" }
   ],
