@@ -10,7 +10,7 @@
   "devDependencies": {
     "@types/node": "^20.11.17",
     "@types/nodemailer": "^6.4.14",
-    "@types/rss-parser": "*",  // 用 * 自动匹配最新可用版本，避免指定不存在的版本
+    "@types/rss-parser": "*",
     "typescript": "^5.3.3"
   },
   "scripts": {
