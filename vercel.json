@@ -1,10 +1,15 @@
 {
-  "version": 2,
+  "version": 2, // Vercel 配置文件版本，必须声明，否则无法识别 crons
   "builds": [
-    { "src": "api/**/*.ts", "use": "@vercel/node" }
+    { "src": "api/**/*.ts", "use": "@vercel/node" } // 告诉 Vercel 用 Node.js 运行 API 目录下的 TS 文件
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" }
+    { "src": "/api/(.*)", "dest": "/api/$1" } // 配置 API 路由映射，确保接口能正常访问
+  ],
+  "crons": [
+    {
+      "path": "/api/check-rss", // 要定时执行的接口路径
+      "schedule": "0 * * * *" // 定时规则（每小时执行一次，符合 Vercel 免费版格式要求）
+    }
   ]
 }
-
