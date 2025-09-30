@@ -1,6 +1,7 @@
 {
   "name": "rss-email-sender-postgres",
   "version": "1.0.0",
+  "description": "基于 Vercel PostgreSQL 的 RSS 邮件推送服务",
   "dependencies": {
     "@vercel/postgres": "^0.7.2",
     "nodemailer": "^6.9.9",
@@ -9,7 +10,11 @@
   "devDependencies": {
     "@types/node": "^20.11.17",
     "@types/nodemailer": "^6.4.14",
-    "@types/rss-parser": "^3.12.3",
+    "@types/rss-parser": "*",  // 用 * 自动匹配最新可用版本，避免指定不存在的版本
     "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel deploy"
   }
 }
