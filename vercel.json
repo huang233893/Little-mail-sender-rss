@@ -5,11 +5,5 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" }
-  ],
-  "crons": [
-    {
-      "path": "/api/check-rss",
-      "schedule": "0 0 * * *" // 每天执行一次，避免频繁触发
-    }
   ]
 }
