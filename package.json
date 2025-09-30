@@ -1,0 +1,8 @@
+{
+  "name": "rss-subscribe",
+  "version": "1.0.0",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1",
+    "nodemailer": "^6.9.7"
+  }
+}
