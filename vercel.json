@@ -1,8 +1,10 @@
 {
-  "crons": [
-    {
-      "path": "/api/check-rss",
-      "schedule": "0 * * * *"
-    }
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 }
+
