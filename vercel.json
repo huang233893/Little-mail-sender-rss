@@ -5,11 +5,8 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" }
-  ]
+  ],
   "crons": [
-    {
-    "path": "/api/check-rss",
-    "schedule": "0 0 * * *"
-  }
+    { "path": "/api/check-rss", "schedule": "0 0 * * *" }
   ]
 }
